@@ -62,3 +62,7 @@ class BaseAgent(ABC):
     def stop(self):
         """Stop the agent"""
         self.is_running = False
+    
+    def set_recorder(self, recorder):
+        """Set the recorder for this agent"""
+        self.recorder = recorder

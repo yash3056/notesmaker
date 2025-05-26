@@ -23,8 +23,8 @@ The system consists of three main agents:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd ai-notes-maker
+git clone https://github.com/yash3056/notesmaker.git
+cd notesmaker
 
 # Install dependencies
 pip install -r requirements.txt
@@ -93,7 +93,7 @@ notesmaker/
 ### 1. Clone and Install Dependencies
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yash3056/notesmaker.git
 cd notesmaker
 pip install -r requirements.txt
 ```

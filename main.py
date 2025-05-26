@@ -57,7 +57,7 @@ def check_documents_folder():
         print("Please add documents to the 'documents' folder:")
         print("- .txt files (plain text)")
         print("- .md files (markdown)")
-        print("- .pdf files (requires: pip install PyPDF2)")
+        print("- .pdf files (requires: pip install pypdf)")
         print("- .docx files (requires: pip install python-docx)")
         print("\nThe system can still work but will have limited content to search.")
         print("="*60)

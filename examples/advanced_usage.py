@@ -15,10 +15,10 @@ from typing import Dict, Any
 # Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from ..src.core.system import MultiAgentSystem
-from ..src.core.data_structures import SynthesisConfig
-from ..src.utils.helpers import ensure_directory_exists, Timer, get_memory_usage
-from ..src.utils.recorder import create_recorder
+from src.core.system import MultiAgentSystem
+from src.core.data_structures import SynthesisConfig
+from src.utils.helpers import ensure_directory_exists, Timer, get_memory_usage
+from src.utils.recorder import get_global_recorder, create_recorder
 from config.settings import get_settings, setup_logging, create_settings
 
 

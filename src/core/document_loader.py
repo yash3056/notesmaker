@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Document readers for different file types
 try:
-    import PyPDF2
+    import pypdf
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
@@ -91,13 +91,13 @@ class DocumentLoader:
     def load_pdf_file(file_path: str) -> str:
         """Load PDF file content"""
         if not PDF_AVAILABLE:
-            logger.error("PyPDF2 not installed. Install with: pip install PyPDF2")
+            logger.error("pypdf not installed. Install with: pip install pypdf")
             return ""
         
         text = ""
         try:
             with open(file_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
+                pdf_reader = pypdf.PdfReader(file)
                 for page in pdf_reader.pages:
                     text += page.extract_text() + "\n"
         except Exception as e:

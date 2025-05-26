@@ -156,7 +156,7 @@ Options:
 Place your source documents in the `documents/` directory. Supported formats:
 
 - **Text files**: `.txt`, `.md`
-- **PDF files**: `.pdf` (requires PyPDF2)
+- **PDF files**: `.pdf` (requires pypdf)
 - **Word documents**: `.docx` (requires python-docx)
 
 The system will automatically:

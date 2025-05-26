@@ -31,6 +31,9 @@ MANIFEST
 *.manifest
 *.spec
 
+# keep env hideen
+.env
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

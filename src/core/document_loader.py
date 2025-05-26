@@ -130,21 +130,26 @@ class DocumentLoader:
         start = 0
         
         while start < len(content):
-            end = start + text_chunk_size
+            end = min(start + text_chunk_size, len(content))
             chunk = content[start:end]
             
-            # Try to break at sentence boundary
+            # Try to break at sentence boundary if not at the end
             if end < len(content):
                 last_period = chunk.rfind('.')
                 last_newline = chunk.rfind('\n')
                 break_point = max(last_period, last_newline)
                 
                 if break_point > start + text_chunk_size // 2:
-                    chunk = content[start:start + break_point + 1]
                     end = start + break_point + 1
+                    chunk = content[start:end]
             
             chunks.append(f"Source: {file_path}\n\n{chunk.strip()}")
-            start = end - overlap
+            
+            # Move start forward, but ensure we make progress
+            next_start = end - overlap
+            if next_start <= start:  # Prevent infinite loops
+                next_start = start + max(1, text_chunk_size // 2)
+            start = next_start
             
             if start >= len(content):
                 break

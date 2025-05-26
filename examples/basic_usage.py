@@ -12,8 +12,8 @@ from pathlib import Path
 # Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from core.system import MultiAgentSystem
-from utils.helpers import ensure_directory_exists
+from ..src.core.system import MultiAgentSystem
+from ..src.utils.helpers import ensure_directory_exists
 from config.settings import get_settings, setup_logging
 
 

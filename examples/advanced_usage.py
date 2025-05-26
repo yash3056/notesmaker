@@ -15,10 +15,10 @@ from typing import Dict, Any
 # Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from core.system import MultiAgentSystem
-from core.data_structures import SynthesisConfig
-from utils.helpers import ensure_directory_exists, Timer, get_memory_usage
-from utils.recorder import create_recorder
+from ..src.core.system import MultiAgentSystem
+from ..src.core.data_structures import SynthesisConfig
+from ..src.utils.helpers import ensure_directory_exists, Timer, get_memory_usage
+from ..src.utils.recorder import create_recorder
 from config.settings import get_settings, setup_logging, create_settings
 
 
@@ -212,7 +212,7 @@ class AdvancedNoteGenerator:
             
         # Save performance metrics
         if self.metrics:
-            from utils.helpers import save_json_safely
+            from ..src.utils.helpers import save_json_safely
             save_json_safely(self.metrics, "performance_metrics.json")
             self.logger.info("Performance metrics saved to performance_metrics.json")
 

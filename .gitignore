@@ -106,6 +106,7 @@ site/
 documents/*
 !documents/example.md
 !documents/README.md
+scraped_content/*
 
 # Jupyter Notebook
 .ipynb_checkpoints

@@ -8,6 +8,10 @@ import asyncio
 import sys
 sys.path.append('.')
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.core.system import MultiAgentSystem
 from src.agents import PlannerAgent, WebSearcherAgent, SynthesizerAgent
 

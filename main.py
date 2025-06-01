@@ -11,6 +11,10 @@ import logging
 import argparse
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from src.core.system import MultiAgentSystem
 

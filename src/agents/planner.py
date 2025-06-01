@@ -41,21 +41,35 @@ class Agent1_Planner(BaseAgent):
         topic = request.get("topic", "")
         requirements = request.get("requirements", {})
         
-        system_prompt = """You are a strategic planner for an AI note-taking system. Your job is to create comprehensive plans for gathering and organizing information on any given topic.
+        # Check if this is a very basic topic or no topic provided
+        is_beginner_topic = self._is_beginner_topic(topic, requirements)
+        
+        if is_beginner_topic:
+            system_prompt = """You are a strategic planner for an AI note-taking system that uses web search to gather information. For beginner topics or when no specific syllabus is provided, you should create plans that search for foundational, introductory content.
+
+You must respond with a structured JSON plan containing:
+1. An objective statement focused on learning fundamentals
+2. A list of logical steps starting with basics
+3. Specific web search queries optimized for finding beginner-friendly content
+4. Expected sections that build knowledge progressively
+
+Focus on creating search queries that will find educational, introductory content suitable for someone new to the topic."""
+        else:
+            system_prompt = """You are a strategic planner for an AI note-taking system that uses web search to gather information. Your job is to create comprehensive plans for gathering and organizing information on any given topic.
 
 You must respond with a structured JSON plan containing:
 1. An objective statement
 2. A list of logical steps to gather information
-3. Specific search queries to find relevant information
+3. Specific web search queries optimized for finding comprehensive information
 4. Expected sections for the final notes
 
-Be thorough and consider what information would be most valuable for someone learning about this topic."""
+Focus on creating search queries that will find detailed, authoritative content from educational sources."""
         
         user_prompt = f"""Create a detailed plan for creating comprehensive notes on the topic: "{topic}"
 
 Requirements: {json.dumps(requirements, indent=2)}
 
-Please provide a structured plan that will help gather all necessary information to create excellent study notes on this topic. Focus on what specific information needs to be searched for and how it should be organized."""
+Please provide a structured plan that will help gather all necessary information to create excellent study notes on this topic. Focus on what specific web search queries would find the most relevant and educational content."""
         
         thinking, response = self.llm.generate_response(user_prompt, system_prompt, max_new_tokens=8196)
         
@@ -116,21 +130,47 @@ Please provide a structured plan that will help gather all necessary information
         except Exception as e:
             logger.error(f"Error parsing plan response: {e}")
         
-        # Fallback: create a basic plan
-        return Plan(
-            objective=f"Create comprehensive notes on {topic}",
-            steps=[
-                "Search for fundamental concepts",
-                "Gather detailed information",
-                "Organize into structured notes"
-            ],
-            search_queries=[
-                SearchQuery(query=f"fundamentals of {topic}"),
-                SearchQuery(query=f"key concepts in {topic}"),
-                SearchQuery(query=f"examples and applications of {topic}")
-            ],
-            expected_sections=["Introduction", "Key Concepts", "Examples", "Summary"]
-        )
+        # Fallback: create a web-search optimized plan
+        is_beginner = self._is_beginner_topic(topic, {})
+        
+        if is_beginner:
+            return Plan(
+                objective=f"Create beginner-friendly comprehensive notes on {topic}",
+                steps=[
+                    "Search for introductory concepts and definitions",
+                    "Gather foundational knowledge and principles", 
+                    "Find practical examples and applications",
+                    "Organize information for progressive learning"
+                ],
+                search_queries=[
+                    SearchQuery(query=f"introduction to {topic} for beginners"),
+                    SearchQuery(query=f"basic concepts of {topic}"),
+                    SearchQuery(query=f"fundamental principles {topic}"),
+                    SearchQuery(query=f"{topic} examples and applications"),
+                    SearchQuery(query=f"getting started with {topic}")
+                ],
+                expected_sections=["Introduction", "Basic Concepts", "Fundamental Principles", 
+                                 "Examples and Applications", "Getting Started", "Summary"]
+            )
+        else:
+            return Plan(
+                objective=f"Create comprehensive notes on {topic}",
+                steps=[
+                    "Search for fundamental concepts",
+                    "Gather detailed information",
+                    "Find advanced topics and applications",
+                    "Organize into structured notes"
+                ],
+                search_queries=[
+                    SearchQuery(query=f"{topic} comprehensive overview"),
+                    SearchQuery(query=f"key concepts in {topic}"),
+                    SearchQuery(query=f"{topic} detailed explanation"),
+                    SearchQuery(query=f"advanced {topic} topics"),
+                    SearchQuery(query=f"{topic} real world applications")
+                ],
+                expected_sections=["Introduction", "Key Concepts", "Detailed Explanation", 
+                                 "Advanced Topics", "Applications", "Summary"]
+            )
     
     async def handle_search_results(self, content: Dict[str, Any]) -> Optional[Message]:
         """Handle search results and decide next steps"""
@@ -234,3 +274,27 @@ Respond with a JSON object containing 'gaps' (list of missing sections) and 'add
             "notes_complete",
             {"final_notes": final_notes}
         )
+    
+    def _is_beginner_topic(self, topic: str, requirements: Dict[str, Any]) -> bool:
+        """Determine if this is a beginner topic or no specific topic provided"""
+        if not topic or len(topic.strip()) < 3:
+            return True
+        
+        # Check requirements for beginner indicators
+        depth = requirements.get("depth", "").lower()
+        audience = requirements.get("audience", "").lower()
+        
+        if depth in ["basic", "beginner", "introductory"]:
+            return True
+        
+        if audience in ["beginners", "students", "new learners"]:
+            return True
+        
+        # Check for very general topics that need foundational content
+        general_topics = ["machine learning", "programming", "physics", "chemistry", 
+                         "mathematics", "biology", "computer science", "data science"]
+        
+        if topic.lower().strip() in general_topics:
+            return True
+        
+        return False

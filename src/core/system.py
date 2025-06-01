@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 
 from ..agents.planner import Agent1_Planner
 from ..agents.synthesizer import Agent2_Synthesizer
-from ..agents.retriever import Agent3_Retriever
+from ..agents.web_searcher import Agent3_WebSearcher
 from .llm_wrapper import QwenLLM
 from .data_structures import Message, SystemMetrics, AgentStatus
 from .document_loader import DocumentLoader
@@ -20,17 +20,12 @@ logger = logging.getLogger(__name__)
 class MultiAgentSystem:
     """Main system orchestrating all agents"""
     
-    def __init__(self, documents_folder: str = "documents", model_name: str = "Qwen/Qwen3-1.7B", config=None):
+    def __init__(self, documents_folder: str = "documents", model_name: str = "Qwen/Qwen3-1.7B", config=None, tavily_api_key: str = None):
         self.config = config
         self.session_start_time = asyncio.get_event_loop().time()
         
-        # Load documents from folder
-        logger.info(f"Loading documents from folder: {documents_folder}")
-        documents = DocumentLoader.load_documents_from_folder(documents_folder)
-        
-        if not documents:
-            logger.warning("No documents loaded! The system will work but won't have any content to search.")
-            logger.info("Please add .txt, .md, .pdf, or .docx files to the 'documents' folder.")
+        # Note: Documents folder is kept for compatibility but web search is now primary source
+        logger.info(f"System starting with web search capabilities")
         
         # Initialize shared LLM
         self.llm = QwenLLM(model_name)
@@ -38,7 +33,7 @@ class MultiAgentSystem:
         # Initialize agents with shared LLM
         self.agent1 = Agent1_Planner(self.llm)
         self.agent2 = Agent2_Synthesizer(self.llm, config.agents if config else None)
-        self.agent3 = Agent3_Retriever(documents)
+        self.agent3 = Agent3_WebSearcher(tavily_api_key)
         
         self.agents = {
             "agent_1": self.agent1,
@@ -65,7 +60,7 @@ class MultiAgentSystem:
         # System metrics
         self.metrics = SystemMetrics(
             session_start_time=self.session_start_time,
-            total_documents=len(documents),
+            total_documents=0,  # No longer using documents
             total_searches=0,
             total_llm_calls=0,
             total_messages=0,
@@ -73,19 +68,16 @@ class MultiAgentSystem:
         )
     
     def add_documents_from_folder(self, folder_path: str):
-        """Add more documents from another folder"""
-        new_documents = DocumentLoader.load_documents_from_folder(folder_path)
-        if new_documents:
-            self.agent3.add_documents(new_documents)
-            self.metrics.total_documents += len(new_documents)
-            logger.info(f"Added {len(new_documents)} new document chunks")
+        """Add more documents from another folder - deprecated for web search version"""
+        logger.warning("Document loading is deprecated in web search version")
     
     def get_document_stats(self) -> Dict[str, Any]:
-        """Get statistics about loaded documents"""
+        """Get statistics about web search capabilities"""
         return {
-            "total_documents": len(self.agent3.document_texts),
-            "index_built": self.agent3.index is not None,
-            "embedding_dimension": self.agent3.embeddings.shape[1] if self.agent3.embeddings is not None else 0
+            "web_search_enabled": self.agent3.client is not None,
+            "tavily_api_configured": bool(self.agent3.api_key),
+            "content_storage_path": str(self.agent3.content_dir),
+            "search_capability": "Web Search via Tavily API"
         }
     
     def get_system_metrics(self) -> SystemMetrics:

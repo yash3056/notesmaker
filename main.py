@@ -29,41 +29,38 @@ logger = logging.getLogger(__name__)
 
 def setup_directories():
     """Create necessary directories if they don't exist"""
-    directories = ['documents', 'records', 'logs']
+    directories = ['records', 'logs', 'scraped_content']
     for directory in directories:
         Path(directory).mkdir(exist_ok=True)
         logger.info(f"Ensured directory exists: {directory}")
 
 
-def check_documents_folder():
-    """Check if documents folder has content"""
-    docs_path = Path("documents")
-    if not docs_path.exists():
-        docs_path.mkdir()
-        logger.info("Created documents folder")
-        return False
-    
-    # Check for supported file types
-    supported_extensions = ['.txt', '.md', '.pdf', '.docx']
-    files = []
-    for ext in supported_extensions:
-        files.extend(list(docs_path.glob(f'**/*{ext}')))
-    
-    if not files:
-        logger.warning("No documents found in the documents folder!")
+def check_scraped_content_folder():
+    """Check and create scraped content folder"""
+    content_path = Path("scraped_content")
+    if not content_path.exists():
+        content_path.mkdir()
+        logger.info("Created scraped_content folder for web content storage")
+    return True
+
+
+def check_tavily_api_key():
+    """Check if Tavily API key is available"""
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
         print("\n" + "="*60)
-        print("NO DOCUMENTS FOUND!")
+        print("TAVILY API KEY NOT SET")
         print("="*60)
-        print("Please add documents to the 'documents' folder:")
-        print("- .txt files (plain text)")
-        print("- .md files (markdown)")
-        print("- .pdf files (requires: pip install pypdf)")
-        print("- .docx files (requires: pip install python-docx)")
-        print("\nThe system can still work but will have limited content to search.")
+        print("This system uses web search to find information on any topic.")
+        print("For optimal functionality, please set your Tavily API key:")
+        print("1. Get an API key from: https://tavily.com")
+        print("2. Set environment variable: export TAVILY_API_KEY='your-key-here'")
+        print("3. Or add it to your .bashrc/.zshrc file")
+        print("\nThe system will work in fallback mode without the API key.")
+        print("Fallback mode provides basic functionality with limited search.")
         print("="*60)
         return False
-    
-    logger.info(f"Found {len(files)} documents in the documents folder")
+    logger.info("Tavily API key found")
     return True
 
 
@@ -95,15 +92,18 @@ async def create_notes_interactive():
     print(f"\nCreating notes on: {topic}")
     print(f"Requirements: {requirements}")
     print("\nStarting note generation... (this may take a few minutes)")
-    print("Processing documents, generating content, and synthesizing notes...")
+    print("Searching web sources, generating content, and synthesizing notes...")
     
     # Create the system and generate notes
-    system = MultiAgentSystem()
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    system = MultiAgentSystem(tavily_api_key=tavily_api_key)
     
-    # Print document statistics
-    stats = system.get_document_stats()
-    print(f"\nLoaded {stats['total_documents']} document chunks")
-    print(f"Index built: {stats['index_built']}")
+    # Print system status
+    print(f"\nWeb search system initialized")
+    if tavily_api_key:
+        print("✅ Tavily API available for enhanced web search")
+    else:
+        print("⚠️  Limited search mode (no Tavily API key)")
     
     try:
         notes = await system.create_notes(topic, requirements)
@@ -136,11 +136,15 @@ async def create_notes_batch(topic: str, requirements: dict):
     """Batch mode for creating notes"""
     logger.info(f"Creating notes in batch mode for topic: {topic}")
     
-    system = MultiAgentSystem()
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    system = MultiAgentSystem(tavily_api_key=tavily_api_key)
     
-    # Print document statistics
-    stats = system.get_document_stats()
-    logger.info(f"Loaded {stats['total_documents']} document chunks")
+    # Print system status
+    logger.info("Web search system initialized")
+    if tavily_api_key:
+        logger.info("Tavily API available for enhanced web search")
+    else:
+        logger.info("Limited search mode (no Tavily API key)")
     
     try:
         notes = await system.create_notes(topic, requirements)
@@ -191,10 +195,11 @@ def main():
     
     # Setup
     setup_directories()
-    has_documents = check_documents_folder()
+    check_scraped_content_folder()
+    api_key_exists = check_tavily_api_key()
     
-    if not has_documents:
-        response = input("\nContinue without documents? (y/n): ").strip().lower()
+    if not api_key_exists:
+        response = input("\nContinue with limited search functionality? (y/n): ").strip().lower()
         if response not in ['y', 'yes', '1', 'true']:
             print("Exiting...")
             return

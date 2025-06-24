@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class Agent3_WebSearcher(BaseAgent):
     """Web Search Information Retrieval Specialist using Tavily"""
     
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None): # type: ignore
         super().__init__("agent_3", "Web Search Retriever")
         
         # Initialize Tavily client
@@ -31,7 +31,7 @@ class Agent3_WebSearcher(BaseAgent):
             self.client = None
         else:
             if TAVILY_AVAILABLE:
-                self.client = TavilyClient(self.api_key)
+                self.client = TavilyClient(self.api_key) # type: ignore
                 logger.info("Tavily client initialized successfully")
             else:
                 logger.error("tavily-python not installed. Install with: pip install tavily-python")
@@ -185,10 +185,6 @@ class Agent3_WebSearcher(BaseAgent):
             lines = (line.strip() for line in text.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             text = ' '.join(chunk for chunk in chunks if chunk)
-            
-            # Limit content length
-            if len(text) > 5000:
-                text = text[:5000] + "..."
             
             return text
             
